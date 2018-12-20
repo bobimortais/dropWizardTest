@@ -13,7 +13,7 @@ import javax.ws.rs.core.MediaType;
 import com.codahale.metrics.annotation.Timed;
 import com.robson.drop.entities.Bill;
 
-@Path("/getBills")
+@Path("/")
 @Produces(MediaType.APPLICATION_JSON)
 public class BillsInfoResource {
     private final String template;
@@ -25,6 +25,7 @@ public class BillsInfoResource {
         this.defaultName = defaultName;
     }
 
+    @Path("/getBills")
     @GET
     @Timed
     public List<Bill> getBills(@QueryParam("type") Optional<String> type) 
@@ -40,6 +41,19 @@ public class BillsInfoResource {
     	billList.add(bill3);
     	billList.add(bill4);
     	billList.add(bill5);
+        return billList;
+    }
+    
+    @Path("/getAllBills")
+    @GET
+    @Timed
+    public List<Bill> getAllBills(@QueryParam("type") Optional<String> type) 
+    {
+    	List<Bill> billList =  new ArrayList<Bill>();
+    	Bill bill1 = new Bill(1, "Utility", 20.25, "Gas", 1);
+    	Bill bill2 = new Bill(2, "Utility", 12.03, "Water", 2);
+    	billList.add(bill1);
+    	billList.add(bill2);
         return billList;
     }
 
