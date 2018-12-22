@@ -54,7 +54,7 @@ class BillTable extends React.Component
   async handleList()
   {
     var post = [];
-    axios.get("http://localhost:8090/getBills")
+    axios.get("http://localhost:8090/getAllBills")
       .then( res => {
                     var posts = [];
                     posts = res.data;

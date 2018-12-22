@@ -10,6 +10,14 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
+import org.hibernate.HibernateException;
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.hibernate.Transaction;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+import org.hibernate.cfg.Configuration;
+import org.hibernate.service.ServiceRegistry;
+
 import com.codahale.metrics.annotation.Timed;
 import com.robson.drop.entities.Bill;
 
@@ -18,6 +26,8 @@ import com.robson.drop.entities.Bill;
 public class BillsInfoResource {
     private final String template;
     private final String defaultName;
+    
+    private static SessionFactory factory; 
 
     public BillsInfoResource(String template, String defaultName)
     {
@@ -49,12 +59,47 @@ public class BillsInfoResource {
     @Timed
     public List<Bill> getAllBills(@QueryParam("type") Optional<String> type) 
     {
-    	List<Bill> billList =  new ArrayList<Bill>();
-    	Bill bill1 = new Bill(1, "Utility", 20.25, "Gas", 1);
-    	Bill bill2 = new Bill(2, "Utility", 12.03, "Water", 2);
-    	billList.add(bill1);
-    	billList.add(bill2);
+    	List<Bill> billList =  getBillsFromDB();
         return billList;
     }
 
+    private List<Bill> getBillsFromDB()
+    {
+    	List<Bill> billList = new ArrayList<Bill>();
+		try 
+		{
+			
+			Configuration configObj = new Configuration();
+			configObj.configure("hibernate.cfg.xml");
+			
+			ServiceRegistry serviceRegistryObj = new StandardServiceRegistryBuilder().applySettings(configObj.getProperties()).build();
+			
+			factory = configObj.buildSessionFactory(serviceRegistryObj);
+			Session session = factory.openSession();
+			Transaction tx = null;
+
+			try 
+			{
+				tx = session.beginTransaction();
+				billList = session.createQuery("FROM BILL").list();
+				tx.commit();
+			} 
+			catch (HibernateException e) 
+			{
+				if (tx != null)
+					tx.rollback();
+				e.printStackTrace();
+			}
+			finally 
+			{
+				session.close();
+			}
+		} 
+		catch (Throwable ex) 
+		{
+			System.err.println("Failed to create sessionFactory object." + ex);
+			throw new ExceptionInInitializerError(ex);
+		}
+		return billList;
+    }
 }
